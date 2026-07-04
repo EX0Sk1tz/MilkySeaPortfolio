@@ -1,0 +1,22 @@
+# Claude local config / workspace files
+.claude/
+
+# ZIP archives
+*.zip
+
+# Other archives, optional
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
