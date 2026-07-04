@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Me — Milky Sea</title>
+<meta name="description" content="About Milky Sea — background, practice, and contact form.">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=neco@400,500,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>
+  if (sessionStorage.getItem('diveArrival')) {
+    document.documentElement.classList.add('dive-arrival');
+  } else if (sessionStorage.getItem('pageTransition')) {
+    document.documentElement.classList.add('page-transition');
+  }
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="page-veil" id="page-veil" aria-hidden="true"></div>
+
+<header class="site-nav">
+  <a class="page-title" href="index.html">About Me</a>
+  <button class="burger" type="button" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" aria-controls="site-menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div class="menu-overlay" data-menu-overlay></div>
+
+<aside class="menu-drawer" id="site-menu" data-menu-drawer aria-hidden="true">
+  <div class="menu-drawer-head">
+    <span class="page-title">Menu</span>
+    <button class="menu-close" type="button" data-menu-close aria-label="Close menu">
+      <span></span><span></span>
+    </button>
+  </div>
+  <nav class="menu-drawer-links" aria-label="Site pages">
+    <a href="index.html">Home</a>
+    <a href="about.html" aria-current="page">About Me</a>
+    <a href="inspirations.html">Inspiration</a>
+    <a href="my-work.html">My Work</a>
+    <a href="ongoing-work.html">Ongoing Projects</a>
+    <a href="current-projects.html">Current Projects</a>
+  </nav>
+  <div class="menu-drawer-foot">
+    <a href="mailto:hello@example.com">hello@example.com</a>
+  </div>
+</aside>
+
+<main id="main" class="wrap">
+
+  <section class="section">
+    <div class="panel wide"><img src="assets/img/about-hero.jpg" alt="About hero image" onerror="this.remove()"><span>About hero image — placeholder</span></div>
+  </section>
+
+  <section class="section about-split" style="padding-top:0">
+    <div>
+      <h1 class="chrome">Milky Sea</h1>
+      <p class="sub">Subheading for description or instructions</p>
+      <p class="lead" style="margin-top:2rem">Body text for your whole article or post. We&rsquo;ll put in some lorem ipsum to show how a filled-out page might look:</p>
+      <p>Excepteur efficient emerging, minim veniam anim aute carefully curated Ginza conversation exquisite perfect nostrud nisi intricate Content. Qui international first-class nulla ut. Punctual adipisicing, essential lovely queen tempor eiusmod irure. Exclusive izakaya charming Scandinavian impeccable aute quality of life soft power pariatur Melbourne occaecat discerning. Qui wardrobe aliquip, et Porter destination Toto remarkable officia Helsinki excepteur Basset hound. Zürich sleepy perfect consectetur.</p>
+      <p>Curious where the ideas come from? Have a look at <a href="inspirations.html" style="color:var(--text);border-bottom:1px solid var(--line)">what inspires this work</a>.</p>
+    </div>
+    <div class="panel photo"><img src="assets/img/about-portrait.jpg" alt="Portrait" loading="lazy" decoding="async" onerror="this.remove()"><span>Portrait — placeholder</span></div>
+  </section>
+
+  <section class="section contact" id="contact">
+    <h2 class="chrome">Contact me</h2>
+    <form action="#" method="post">
+      <div class="field-row">
+        <div class="field">
+          <label for="first-name">First name</label>
+          <input type="text" id="first-name" name="first-name" placeholder="Jane" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label for="last-name">Last name</label>
+          <input type="text" id="last-name" name="last-name" placeholder="Smitherton" autocomplete="family-name">
+        </div>
+      </div>
+      <div class="field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" placeholder="email@janesfakedomain.net" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="message">Your message</label>
+        <textarea id="message" name="message" placeholder="Enter your question or message" required></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit">Submit</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <nav class="journey-nav is-single" aria-label="Continue the journey">
+      <div class="journey-next">
+        <span class="journey-label">Up next</span>
+        <a class="btn" href="inspirations.html">Inspiration →</a>
+      </div>
+    </nav>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <span>© 2026 Milky Sea</span>
+  <a href="index.html">Back to start</a>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>

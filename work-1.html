@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work 1 — Milky Sea</title>
+<meta name="description" content="Work 1 — a project by Milky Sea.">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=neco@400,500,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>
+  if (sessionStorage.getItem('diveArrival')) {
+    document.documentElement.classList.add('dive-arrival');
+  } else if (sessionStorage.getItem('pageTransition')) {
+    document.documentElement.classList.add('page-transition');
+  }
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="page-veil" id="page-veil" aria-hidden="true"></div>
+
+<header class="site-nav">
+  <a class="page-title" href="index.html">My Work</a>
+  <button class="burger" type="button" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" aria-controls="site-menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div class="menu-overlay" data-menu-overlay></div>
+
+<aside class="menu-drawer" id="site-menu" data-menu-drawer aria-hidden="true">
+  <div class="menu-drawer-head">
+    <span class="page-title">Menu</span>
+    <button class="menu-close" type="button" data-menu-close aria-label="Close menu">
+      <span></span><span></span>
+    </button>
+  </div>
+  <nav class="menu-drawer-links" aria-label="Site pages">
+    <a href="index.html">Home</a>
+    <a href="about.html">About Me</a>
+    <a href="inspirations.html">Inspiration</a>
+    <a href="my-work.html" aria-current="page">My Work</a>
+    <a href="ongoing-work.html">Ongoing Projects</a>
+    <a href="current-projects.html">Current Projects</a>
+  </nav>
+  <div class="menu-drawer-foot">
+    <a href="mailto:hello@example.com">hello@example.com</a>
+  </div>
+</aside>
+
+<main id="main" class="wrap">
+
+  <section class="section">
+    <div class="panel wide"><img src="assets/img/work-1-hero.jpg" alt="Work 1 hero image" onerror="this.remove()"><span>Work 1 hero image — placeholder</span></div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <h1 class="chrome">Work 1</h1>
+    <p class="sub">Hi my Name is Milky Sea. I am a german Artist! thats about all i have to say for now idk i just wanted to have something stand here cool</p>
+  </section>
+
+  <article class="section article-body">
+    <p class="lead">Body text for your whole article or post. We&rsquo;ll put in some lorem ipsum to show how a filled-out page might look:</p>
+    <p>Excepteur efficient emerging, minim veniam anim aute carefully curated Ginza conversation exquisite perfect nostrud nisi intricate Content. Qui international first-class nulla ut. Punctual adipisicing, essential lovely queen tempor eiusmod irure. Exclusive izakaya charming Scandinavian impeccable aute quality of life soft power pariatur Melbourne occaecat discerning. Qui wardrobe aliquip, et Porter destination Toto remarkable officia Helsinki excepteur Basset hound. Zürich sleepy perfect consectetur.</p>
+
+    <div class="panel wide"><img src="assets/img/work-1-01.jpg" alt="Work 1 image 01" loading="lazy" decoding="async" onerror="this.remove()"><span>Work 1 image 01 — placeholder</span></div>
+
+    <p>Exquisite sophisticated iconic cutting-edge laborum deserunt Addis Ababa esse bureaux cupidatat id minim. Sharp classic the best commodo nostrud delightful. Conversation aute Rochester id. Qui sunt remarkable deserunt intricate airport handsome K-pop excepteur classic esse Asia-Pacific laboris.</p>
+
+    <p>Excepteur efficient emerging, minim veniam anim cloying aute carefully curated gauche. Espresso exquisite perfect nostrud nisi intricate. Punctual adipisicing Borzoi, essential lovely tempor eiusmod irure. Exclusive izakaya charming Quezon City impeccable aute quality of life soft power pariatur occaecat discerning. Qui wardrobe aliquip, et Amadeus rock opera.</p>
+
+    <div class="panel wide"><img src="assets/img/work-1-02.jpg" alt="Work 1 image 02" loading="lazy" decoding="async" onerror="this.remove()"><span>Work 1 image 02 — placeholder</span></div>
+
+    <p>Exquisite sophisticated iconic cutting-edge laborum deserunt esse bureaux cupidatat id minim. Sharp classic the best commodo nostrud delightful. Conversation aute wifey id. Qui sunt remarkable deserunt intricate airport excepteur classic esse riot girl.</p>
+
+    <nav class="journey-nav" aria-label="Continue the journey">
+      <a class="btn" href="my-work.html">← Back to My Work</a>
+      <div class="journey-next">
+        <span class="journey-label">Up next</span>
+        <a class="btn" href="work-2.html">Work 2 →</a>
+      </div>
+    </nav>
+  </article>
+
+</main>
+
+<footer class="site-footer">
+  <span>© 2026 Milky Sea</span>
+  <a href="my-work.html">Back to My Work</a>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>

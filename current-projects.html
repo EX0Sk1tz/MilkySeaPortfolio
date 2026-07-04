@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Current Projects — Milky Sea</title>
+<meta name="description" content="What Milky Sea is working on right now.">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=neco@400,500,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>
+  if (sessionStorage.getItem('diveArrival')) {
+    document.documentElement.classList.add('dive-arrival');
+  } else if (sessionStorage.getItem('pageTransition')) {
+    document.documentElement.classList.add('page-transition');
+  }
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="page-veil" id="page-veil" aria-hidden="true"></div>
+
+<header class="site-nav">
+  <a class="page-title" href="index.html">Current Projects</a>
+  <button class="burger" type="button" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" aria-controls="site-menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div class="menu-overlay" data-menu-overlay></div>
+
+<aside class="menu-drawer" id="site-menu" data-menu-drawer aria-hidden="true">
+  <div class="menu-drawer-head">
+    <span class="page-title">Menu</span>
+    <button class="menu-close" type="button" data-menu-close aria-label="Close menu">
+      <span></span><span></span>
+    </button>
+  </div>
+  <nav class="menu-drawer-links" aria-label="Site pages">
+    <a href="index.html">Home</a>
+    <a href="about.html">About Me</a>
+    <a href="inspirations.html">Inspiration</a>
+    <a href="my-work.html">My Work</a>
+    <a href="ongoing-work.html">Ongoing Projects</a>
+    <a href="current-projects.html" aria-current="page">Current Projects</a>
+  </nav>
+  <div class="menu-drawer-foot">
+    <a href="mailto:hello@example.com">hello@example.com</a>
+  </div>
+</aside>
+
+<main id="main" class="wrap">
+
+  <section class="section">
+    <div class="panel wide"><img src="assets/img/current-projects-hero.jpg" alt="Current Projects hero image" onerror="this.remove()"><span>Current Projects hero image — placeholder</span></div>
+  </section>
+
+  <section class="section center" style="padding-top:0">
+    <h1 class="chrome">Current Projects</h1>
+    <p class="sub">What i am working on right now</p>
+    <p style="margin-top:2rem"><span class="pill">In Progress</span></p>
+  </section>
+
+  <section aria-label="Current projects overview">
+    <div class="work-row">
+      <div class="work-text">
+        <h3 class="chrome">Current Project 1</h3>
+        <p>Description of the first current project</p>
+        <a class="btn" href="ongoing-1.html">Dive Deeper</a>
+      </div>
+      <div class="work-media panel card"><img src="assets/img/current-projects-1.jpg" alt="Current project 1 image" loading="lazy" decoding="async" onerror="this.remove()"><span>Current project 1 image — placeholder</span></div>
+    </div>
+
+    <div class="work-row flip">
+      <div class="work-text">
+        <h3 class="chrome">Current Project 2</h3>
+        <p>Description of the second current project</p>
+        <a class="btn" href="ongoing-2.html">Dive Deeper</a>
+      </div>
+      <div class="work-media panel card"><img src="assets/img/current-projects-2.jpg" alt="Current project 2 image" loading="lazy" decoding="async" onerror="this.remove()"><span>Current project 2 image — placeholder</span></div>
+    </div>
+  </section>
+
+  <nav class="journey-nav" aria-label="Continue the journey">
+    <a class="btn" href="index.html">← Back to Home</a>
+    <div class="journey-next">
+      <span class="journey-label">The journey ends here</span>
+      <a class="btn" href="index.html">Restart the tour →</a>
+    </div>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <span>© 2026 Milky Sea</span>
+  <a href="about.html#contact">Contact me</a>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>

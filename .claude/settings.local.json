@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat -A /dev/null; true)",
+      "Read(//dev/**)",
+      "WebFetch(domain:www.fontshare.com)",
+      "WebFetch(domain:api.fontshare.com)"
+    ]
+  }
+}
