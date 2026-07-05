@@ -568,7 +568,7 @@ var SITE_JOURNEY = [
     return texture;
   }
 
-  // paints the title as flat white text onto a 2D canvas —
+  // paints the title as flat black text onto a milk-white 2D canvas —
   // this bitmap is what the water simulation then distorts
   function paintLandingTitleTexture(canvas, title) {
     var ctx = canvas.getContext("2d");
@@ -576,16 +576,16 @@ var SITE_JOURNEY = [
     var height = canvas.height;
     var dprScale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
-    ctx.fillStyle = "#121317";
+    ctx.fillStyle = "#fdfbf5";
     ctx.fillRect(0, 0, width, height);
 
     var glow = ctx.createRadialGradient(
       width * 0.5, height * 0.46, 0,
       width * 0.5, height * 0.46, Math.max(width, height) * 0.56
     );
-    glow.addColorStop(0, "rgba(255,255,255,0.08)");
-    glow.addColorStop(0.42, "rgba(255,255,255,0.025)");
-    glow.addColorStop(1, "rgba(255,255,255,0)");
+    glow.addColorStop(0, "rgba(0,0,0,0.05)");
+    glow.addColorStop(0.42, "rgba(0,0,0,0.018)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, width, height);
 
@@ -595,16 +595,16 @@ var SITE_JOURNEY = [
     ctx.save();
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = "800 " + safeFontSize + 'px "Archivo", "Inter", Arial, sans-serif';
+    ctx.font = "800 " + safeFontSize + 'px "Neco", Arial, sans-serif';
     ctx.letterSpacing = Math.max(0, safeFontSize * -0.02) + "px";
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#121317";
     ctx.fillText(title, width * 0.5, height * 0.47);
     ctx.restore();
 
     var shade = ctx.createLinearGradient(0, 0, 0, height);
-    shade.addColorStop(0, "rgba(0,0,0,0.08)");
+    shade.addColorStop(0, "rgba(0,0,0,0.05)");
     shade.addColorStop(0.72, "rgba(0,0,0,0)");
-    shade.addColorStop(1, "rgba(0,0,0,0.22)");
+    shade.addColorStop(1, "rgba(0,0,0,0.12)");
     ctx.fillStyle = shade;
     ctx.fillRect(0, 0, width, height);
   }

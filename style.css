@@ -427,12 +427,16 @@ p + p { margin-top: 1.2rem; }
   padding: 2rem;
 }
 
-.landing-content h1 {
-  font-size: var(--hero-title-size);
-  text-shadow: 0 6px 30px rgba(255,255,255,.55);
-  cursor: default;
-  -webkit-user-select: none;
-  user-select: none;
+/* the title is painted onto the ripple canvas itself (see script.js);
+   this h1 stays for accessibility/SEO but isn't shown on top of it */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* scroll prompt — deliberately quiet: the title and the water are
