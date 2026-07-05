@@ -12,18 +12,18 @@
    hand-written in its HTML (the site has no build step to
    generate it from this list), but they should always match this
    order — update both together if the sequence ever changes.
+   Inspiration's "Up next" loops back to Home, closing the tour.
    ============================================================ */
 var SITE_JOURNEY = [
   { title: "Home", href: "index.html" },
-  { title: "About", href: "about.html" },
-  { title: "Inspiration", href: "inspirations.html" },
   { title: "Selected Work", href: "my-work.html" },
   { title: "Work 1", href: "work-1.html" },
   { title: "Work 2", href: "work-2.html" },
   { title: "Work in Progress", href: "ongoing-work.html" },
   { title: "Ongoing 1", href: "ongoing-1.html" },
   { title: "Ongoing 2", href: "ongoing-2.html" },
-  { title: "Contact", href: "about.html#contact" }
+  { title: "About", href: "about.html" },
+  { title: "Inspiration", href: "inspirations.html" }
 ];
 
 (function () {
@@ -289,6 +289,18 @@ var SITE_JOURNEY = [
      between pages feels like one continuous piece rather than a
      series of hard page loads. */
   var pageVeil = document.getElementById("page-veil");
+
+  // every page sets #page-veil to fully opaque right before navigating
+  // away and relies on the next page load to start fresh — but a
+  // back/forward navigation can restore this exact page from the
+  // browser's bfcache instead of reloading it, bringing back the DOM
+  // (and the still-opaque veil) exactly as it was the instant before
+  // it unloaded. Without this, that reads as the page going blank.
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted && pageVeil) {
+      pageVeil.classList.remove("is-visible");
+    }
+  });
 
   if (pageVeil && !reduceMotion) {
     document.addEventListener("click", function (e) {
@@ -934,7 +946,11 @@ var SITE_JOURNEY = [
       paintBubbleLabelTexture,
       {
         alpha: true,
-        idleTimeoutMs: 1400,
+        // long enough for the shader's slow pressure/velocity decay to
+        // actually settle back to stillness before the render loop stops —
+        // at 1400ms it used to cut off while the ripple was still visibly
+        // moving, reading as an abrupt freeze rather than a fade-out
+        idleTimeoutMs: 3600,
         onReady: function () {
           button.classList.add("ripple-ready");
         }
