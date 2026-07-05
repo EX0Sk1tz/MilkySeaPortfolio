@@ -287,6 +287,30 @@ p + p { margin-top: 1.2rem; }
 .menu-drawer-links a:hover { opacity: 1; padding-left: .4rem; }
 .menu-drawer-links a[aria-current="page"] { opacity: 1; }
 
+/* always-open sub-list under a hub link (My Work / Work in Progress)
+   so the individual pieces are reachable straight from the menu,
+   no accordion/expand step needed */
+.menu-drawer-sublinks {
+  display: flex;
+  flex-direction: column;
+  padding-left: 1rem;
+  margin-left: .3rem;
+  border-left: 1px solid var(--line-soft);
+}
+.menu-drawer-sublinks a {
+  font-family: var(--font-display);
+  font-size: var(--size-nav-title);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  opacity: .45;
+  padding: .55rem .1rem;
+  border-bottom: 1px solid var(--line-soft);
+  transition: opacity .2s ease, padding-left .2s ease;
+}
+.menu-drawer-sublinks a:last-child { border-bottom: none; }
+.menu-drawer-sublinks a:hover { opacity: 1; padding-left: .4rem; }
+.menu-drawer-sublinks a[aria-current="page"] { opacity: 1; }
+
 .menu-drawer-foot {
   margin-top: auto;
   padding-top: 1.6rem;

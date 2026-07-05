@@ -20,7 +20,7 @@ var SITE_JOURNEY = [
   { title: "Selected Work", href: "my-work.html" },
   { title: "Work 1", href: "work-1.html" },
   { title: "Work 2", href: "work-2.html" },
-  { title: "Process", href: "ongoing-work.html" },
+  { title: "Work in Progress", href: "ongoing-work.html" },
   { title: "Ongoing 1", href: "ongoing-1.html" },
   { title: "Ongoing 2", href: "ongoing-2.html" },
   { title: "Contact", href: "about.html#contact" }
