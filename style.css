@@ -504,7 +504,7 @@ p + p { margin-top: 1.2rem; }
    this class, so the two mechanisms never fight each other. */
 .landing-stage.diving .landing-media {
   transition: transform 950ms cubic-bezier(.6,0,.15,1);
-  transform: scale(9);
+  transform: scale(4);
   transform-origin: var(--dive-x, 50%) var(--dive-y, 50%);
 }
 .landing-stage.diving .landing-scrim { opacity: .2; }

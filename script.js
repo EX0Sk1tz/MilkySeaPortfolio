@@ -30,6 +30,14 @@ var SITE_JOURNEY = [
 (function () {
   "use strict";
 
+  // stop the browser from restoring a mid-scroll position on back/forward
+  // navigation — without this, returning to the landing page via the back
+  // button re-arrives already scrolled to where the dive completed, and
+  // the scroll-progress handler below immediately re-triggers the dive.
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+
   /* ---------------- Slide-out menu ---------------- */
   var burger = document.querySelector(".burger");
   var drawer = document.querySelector("[data-menu-drawer]");
@@ -118,6 +126,22 @@ var SITE_JOURNEY = [
 
     var target = scrollPrompt.getAttribute("data-target") || "about.html";
 
+    // covers back/forward-cache restores, where the page (and its JS state)
+    // comes back exactly as it was mid-dive instead of re-running from
+    // scratch — put it back to a fresh, un-entered landing page
+    window.addEventListener("pageshow", function (event) {
+      if (!event.persisted) return;
+      hasEntered = false;
+      hasInteracted = false;
+      window.scrollTo(0, 0);
+      scrollPrompt.classList.remove("is-visible");
+      if (stage) stage.classList.remove("diving");
+      if (zoom) zoom.classList.remove("is-diving");
+      if (media) media.style.transform = "";
+      if (copy) copy.style.opacity = "";
+      promptTimer = setTimeout(showPrompt, 5000);
+    });
+
     if (reduceMotion || !stage || !media || !spacer || !zoom) {
       // no scroll-jacking, no forced motion — the prompt is just a plain button
       promptTimer = setTimeout(showPrompt, 5000);
@@ -158,13 +182,13 @@ var SITE_JOURNEY = [
 
         if (progress > 0.015) markInteracted();
 
-        var scale = 1 + progress * 8;
+        var scale = 1 + progress * 3;
         media.style.transform = "scale(" + scale + ")";
 
         var fade = Math.max(0, 1 - progress * 2.2);
         if (copy) copy.style.opacity = fade;
 
-        if (progress >= 0.985) {
+        if (progress >= 0.88) {
           completeEntry();
         }
       }
@@ -697,9 +721,14 @@ var SITE_JOURNEY = [
       return { texture: texture, framebuffer: framebuffer };
     }
 
+    // painted well above the canvas's own device-pixel resolution so the
+    // title stays crisp once the dive zoom magnifies it, instead of the
+    // blocky upscaling you'd get sourcing it at 1:1 canvas resolution
+    var TITLE_TEXTURE_SUPERSAMPLE = 2;
+
     function updateSourceTexture() {
-      sourceCanvas.width = canvasWidth;
-      sourceCanvas.height = canvasHeight;
+      sourceCanvas.width = Math.round(canvasWidth * TITLE_TEXTURE_SUPERSAMPLE);
+      sourceCanvas.height = Math.round(canvasHeight * TITLE_TEXTURE_SUPERSAMPLE);
       paintLandingTitleTexture(sourceCanvas, landingTitle);
 
       gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
