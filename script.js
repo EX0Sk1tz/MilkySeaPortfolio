@@ -23,7 +23,6 @@ var SITE_JOURNEY = [
   { title: "Process", href: "ongoing-work.html" },
   { title: "Ongoing 1", href: "ongoing-1.html" },
   { title: "Ongoing 2", href: "ongoing-2.html" },
-  { title: "In Progress", href: "current-projects.html" },
   { title: "Contact", href: "about.html#contact" }
 ];
 
@@ -76,6 +75,23 @@ var SITE_JOURNEY = [
     if (closeBtn) closeBtn.addEventListener("click", closeMenu);
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") closeMenu();
+    });
+  }
+
+  /* ---------------- Shared ripple-ring burst ----------------
+     spawns the same three staggered expanding rings used by the
+     landing page's scroll prompt */
+  function spawnRippleBurst(layer) {
+    if (!layer) return;
+    [0, 150, 300].forEach(function (delay) {
+      setTimeout(function () {
+        var ring = document.createElement("span");
+        ring.className = "ripple-ring";
+        layer.appendChild(ring);
+        ring.addEventListener("animationend", function () {
+          ring.remove();
+        });
+      }, delay);
     });
   }
 
@@ -217,19 +233,7 @@ var SITE_JOURNEY = [
         stage.style.setProperty("--dive-x", originX + "%");
         stage.style.setProperty("--dive-y", originY + "%");
 
-        var layer = scrollPrompt.querySelector(".ripple-layer");
-        if (layer) {
-          [0, 150, 300].forEach(function (delay) {
-            setTimeout(function () {
-              var ring = document.createElement("span");
-              ring.className = "ripple-ring";
-              layer.appendChild(ring);
-              ring.addEventListener("animationend", function () {
-                ring.remove();
-              });
-            }, delay);
-          });
-        }
+        spawnRippleBurst(scrollPrompt.querySelector(".ripple-layer"));
 
         setTimeout(function () {
           media.style.transform = "";
@@ -407,25 +411,21 @@ var SITE_JOURNEY = [
 })();
 
 /* ============================================================
-   Landing page water ripple — the hero title is painted onto a
-   canvas and distorted by a small WebGL2 fluid simulation that
-   reacts to the cursor (or a finger, on touch devices). Falls
-   back to the plain <h1> whenever WebGL2 / float buffers / the
-   shaders aren't available, or the person prefers reduced motion.
+   Water ripple — a small WebGL2 fluid simulation that distorts a
+   2D-painted text bitmap, reacting to the cursor (or a finger on
+   touch devices). Reused for two surfaces:
+     1) the landing page hero title (opaque, full-viewport canvas)
+     2) each "Dive Deeper" bubble button's label (a small,
+        transparent canvas layered over the glass button chrome,
+        so the CSS glass background still shows through)
+   Falls back to the plain text/CSS whenever WebGL2 / float
+   buffers / the shaders aren't available, or reduced motion is on.
    ============================================================ */
 (function () {
   "use strict";
 
-  var rippleCanvas = document.querySelector("[data-ripple-canvas]");
-  if (!rippleCanvas) return;
-
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduceMotion) return;
-
-  var landingStage = document.getElementById("landing-stage");
-  if (!landingStage) return;
-
-  var body = document.body;
 
   var vertexShaderSource =
     "#version 300 es\n" +
@@ -503,7 +503,7 @@ var SITE_JOURNEY = [
     "  float glint = pow(max(0.0, dot(normal, normalize(vec3(-3.0, 10.0, 3.0)))), 60.0);\n" +
     "  float titleMask = smoothstep(0.18, 0.95, max(color.r, max(color.g, color.b)));\n" +
     "  vec3 finalColor = color.rgb + vec3(glint) * (0.08 + titleMask * 0.30);\n" +
-    "  outColor = vec4(finalColor, 1.0);\n" +
+    "  outColor = vec4(finalColor, color.a);\n" +
     "}\n";
 
   async function loadTextFile(path, fallback) {
@@ -514,6 +514,21 @@ var SITE_JOURNEY = [
     } catch (error) {
       return fallback;
     }
+  }
+
+  // fetched once and shared across every ripple instance on the page —
+  // each instance still compiles its own WebGLProgram (programs can't be
+  // shared across canvases/contexts), but there's no need to re-fetch
+  // the same .frag files for every button
+  var shaderSourcesPromise = null;
+  function loadShaderSources() {
+    if (!shaderSourcesPromise) {
+      shaderSourcesPromise = Promise.all([
+        loadTextFile("shaders/water-simulation.frag", fallbackSimulationShader),
+        loadTextFile("shaders/water-render.frag", fallbackRenderShader)
+      ]);
+    }
+    return shaderSourcesPromise;
   }
 
   function createShader(gl, type, source) {
@@ -588,7 +603,10 @@ var SITE_JOURNEY = [
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([12, 13, 15, 255]));
+    // transparent placeholder — matters for the (alpha: true) bubble-button
+    // instances so there's no one-frame flash of an opaque block before
+    // the real texture uploads; a no-op for the opaque hero canvas
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
     return texture;
   }
 
@@ -633,9 +651,55 @@ var SITE_JOURNEY = [
     ctx.fillRect(0, 0, width, height);
   }
 
-  async function initLandingRipple() {
-    var gl = rippleCanvas.getContext("webgl2", {
-      alpha: false,
+  // paints a bubble button's label onto a transparent 2D canvas, sized to
+  // read at the same 15px/600-weight/Neco look as the CSS .btn text it
+  // replaces — only the glyphs are opaque, so the glass background (and
+  // the water shader's alpha passthrough) still show through around them
+  function paintBubbleLabelTexture(canvas, label, meta) {
+    var ctx = canvas.getContext("2d");
+    var width = canvas.width;
+    var height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    var pxScale = width / Math.max(1, meta.cssWidth);
+    var fontSize = 15 * pxScale;
+
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "600 " + fontSize + 'px "Neco", Arial, sans-serif';
+    ctx.letterSpacing = (fontSize * 0.02) + "px";
+    ctx.fillStyle = "#121317";
+    ctx.fillText(label, width * 0.5, height * 0.52);
+    ctx.restore();
+  }
+
+  // painted well above the canvas's own device-pixel resolution so text
+  // stays crisp under magnification (the hero's dive zoom, or simply a
+  // small button viewed on a high-DPI screen) instead of blocky upscaling
+  var TEXTURE_SUPERSAMPLE = 2;
+
+  /**
+   * Wires one <canvas> to a fluid water-ripple simulation that distorts a
+   * label painted by `paintTexture`. `container`'s rect drives the
+   * canvas resolution and is the surface that reacts to the pointer.
+   *
+   * config:
+   *   alpha         — true for surfaces that must stay transparent where
+   *                   there's no text (bubble buttons); false for the
+   *                   opaque hero canvas
+   *   idleTimeoutMs — how long the simulation keeps animating after the
+   *                   last pointer disturbance before it goes to sleep
+   *   onReady       — called once the shader has actually compiled and
+   *                   the first frame is about to render, so callers can
+   *                   swap away a static fallback
+   */
+  async function createWaterRipple(canvas, container, label, paintTexture, config) {
+    config = config || {};
+    var idleTimeoutMs = config.idleTimeoutMs || 6000;
+
+    var gl = canvas.getContext("webgl2", {
+      alpha: !!config.alpha,
       antialias: false,
       depth: false,
       stencil: false,
@@ -647,10 +711,7 @@ var SITE_JOURNEY = [
     var floatBufferSupport = gl.getExtension("EXT_color_buffer_float");
     if (!floatBufferSupport) return;
 
-    var sources = await Promise.all([
-      loadTextFile("shaders/water-simulation.frag", fallbackSimulationShader),
-      loadTextFile("shaders/water-render.frag", fallbackRenderShader)
-    ]);
+    var sources = await loadShaderSources();
     var simulationShaderSource = sources[0];
     var renderShaderSource = sources[1];
 
@@ -663,8 +724,6 @@ var SITE_JOURNEY = [
       console.warn("Water ripple shader could not be created:", error);
       return;
     }
-
-    body.classList.add("water-ready");
 
     var buffer = createFullscreenBuffer(gl);
 
@@ -684,7 +743,6 @@ var SITE_JOURNEY = [
 
     var sourceTexture = createImageTexture(gl);
     var sourceCanvas = document.createElement("canvas");
-    var landingTitle = rippleCanvas.dataset.rippleTitle || "Milky Sea";
 
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
@@ -721,15 +779,10 @@ var SITE_JOURNEY = [
       return { texture: texture, framebuffer: framebuffer };
     }
 
-    // painted well above the canvas's own device-pixel resolution so the
-    // title stays crisp once the dive zoom magnifies it, instead of the
-    // blocky upscaling you'd get sourcing it at 1:1 canvas resolution
-    var TITLE_TEXTURE_SUPERSAMPLE = 2;
-
-    function updateSourceTexture() {
-      sourceCanvas.width = Math.round(canvasWidth * TITLE_TEXTURE_SUPERSAMPLE);
-      sourceCanvas.height = Math.round(canvasHeight * TITLE_TEXTURE_SUPERSAMPLE);
-      paintLandingTitleTexture(sourceCanvas, landingTitle);
+    function updateSourceTexture(cssWidth, cssHeight, dpr) {
+      sourceCanvas.width = Math.round(canvasWidth * TEXTURE_SUPERSAMPLE);
+      sourceCanvas.height = Math.round(canvasHeight * TEXTURE_SUPERSAMPLE);
+      paintTexture(sourceCanvas, label, { cssWidth: cssWidth, cssHeight: cssHeight, dpr: dpr });
 
       gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -738,17 +791,18 @@ var SITE_JOURNEY = [
     }
 
     function resizeCanvas() {
-      var rect = landingStage.getBoundingClientRect();
+      var rect = container.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvasWidth = Math.max(1, Math.round(rect.width * dpr));
       canvasHeight = Math.max(1, Math.round(rect.height * dpr));
       simWidth = Math.max(160, Math.round(canvasWidth * 0.5));
       simHeight = Math.max(120, Math.round(canvasHeight * 0.5));
 
-      rippleCanvas.width = canvasWidth;
-      rippleCanvas.height = canvasHeight;
-      rippleCanvas.style.width = Math.max(1, rect.width) + "px";
-      rippleCanvas.style.height = Math.max(1, rect.height) + "px";
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      canvas.style.width = Math.max(1, rect.width) + "px";
+      canvas.style.height = Math.max(1, rect.height) + "px";
 
       destroyTarget(readTarget);
       destroyTarget(writeTarget);
@@ -756,12 +810,12 @@ var SITE_JOURNEY = [
       writeTarget = createTarget(simWidth, simHeight);
       frame = 0;
 
-      updateSourceTexture();
+      updateSourceTexture(rect.width, rect.height, dpr);
       startAnimation();
     }
 
     function updateMouseFromEvent(event) {
-      var rect = rippleCanvas.getBoundingClientRect();
+      var rect = canvas.getBoundingClientRect();
       var x = (event.clientX - rect.left) / Math.max(rect.width, 1);
       var y = (event.clientY - rect.top) / Math.max(rect.height, 1);
 
@@ -817,7 +871,7 @@ var SITE_JOURNEY = [
 
       frame += 1;
 
-      var keepAnimating = frame < 3 || nowMs - lastInteractionTime < 6000;
+      var keepAnimating = frame < 3 || nowMs - lastInteractionTime < idleTimeoutMs;
       if (keepAnimating) {
         rafId = requestAnimationFrame(renderFrame);
       } else {
@@ -831,9 +885,9 @@ var SITE_JOURNEY = [
       }
     }
 
-    landingStage.addEventListener("pointermove", updateMouseFromEvent);
-    landingStage.addEventListener("pointerenter", updateMouseFromEvent);
-    landingStage.addEventListener(
+    container.addEventListener("pointermove", updateMouseFromEvent);
+    container.addEventListener("pointerenter", updateMouseFromEvent);
+    container.addEventListener(
       "touchmove",
       function (event) {
         if (event.touches && event.touches[0]) updateMouseFromEvent(event.touches[0]);
@@ -843,7 +897,48 @@ var SITE_JOURNEY = [
 
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
+
+    if (config.onReady) config.onReady();
   }
 
-  initLandingRipple();
+  // ---- landing-page hero title ----
+  var rippleCanvas = document.querySelector("[data-ripple-canvas]");
+  var landingStage = document.getElementById("landing-stage");
+  if (rippleCanvas && landingStage) {
+    createWaterRipple(
+      rippleCanvas,
+      landingStage,
+      rippleCanvas.dataset.rippleTitle || "Milky Sea",
+      paintLandingTitleTexture,
+      {
+        alpha: false,
+        idleTimeoutMs: 6000,
+        onReady: function () {
+          document.body.classList.add("water-ready");
+        }
+      }
+    );
+  }
+
+  // ---- "Dive Deeper" bubble buttons ----
+  var bubbleButtons = document.querySelectorAll(".btn-bubble");
+  bubbleButtons.forEach(function (button) {
+    var canvas = button.querySelector(".btn-bubble-canvas");
+    var labelEl = button.querySelector(".btn-bubble-label");
+    if (!canvas || !labelEl) return;
+
+    createWaterRipple(
+      canvas,
+      button,
+      labelEl.textContent.trim(),
+      paintBubbleLabelTexture,
+      {
+        alpha: true,
+        idleTimeoutMs: 1400,
+        onReady: function () {
+          button.classList.add("ripple-ready");
+        }
+      }
+    );
+  });
 })();

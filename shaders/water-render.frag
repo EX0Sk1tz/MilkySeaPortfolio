@@ -27,5 +27,8 @@ void main() {
   float titleMask = smoothstep(0.18, 0.95, max(color.r, max(color.g, color.b)));
   vec3 finalColor = color.rgb + vec3(glint) * (0.08 + titleMask * 0.30);
 
-  outColor = vec4(finalColor, 1.0);
+  // alpha passes through from the source image — a no-op for the fully
+  // opaque landing-page title bitmap, but lets transparent surfaces (the
+  // bubble-button labels) keep whatever's behind them showing through
+  outColor = vec4(finalColor, color.a);
 }
