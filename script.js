@@ -6,6 +6,27 @@
    4) Apple-style scroll reveals for content further down each page
    ============================================================ */
 
+/* ============================================================
+   SITE JOURNEY — single source of truth for the guided page-to-
+   page order. Each page's journey-nav "Up next" link is still
+   hand-written in its HTML (the site has no build step to
+   generate it from this list), but they should always match this
+   order — update both together if the sequence ever changes.
+   ============================================================ */
+var SITE_JOURNEY = [
+  { title: "Home", href: "index.html" },
+  { title: "About", href: "about.html" },
+  { title: "Inspiration", href: "inspirations.html" },
+  { title: "Selected Work", href: "my-work.html" },
+  { title: "Work 1", href: "work-1.html" },
+  { title: "Work 2", href: "work-2.html" },
+  { title: "Process", href: "ongoing-work.html" },
+  { title: "Ongoing 1", href: "ongoing-1.html" },
+  { title: "Ongoing 2", href: "ongoing-2.html" },
+  { title: "In Progress", href: "current-projects.html" },
+  { title: "Contact", href: "about.html#contact" }
+];
+
 (function () {
   "use strict";
 
@@ -60,6 +81,16 @@
     var spacer = document.getElementById("landing-scroll-spacer");
     var zoom = document.getElementById("dive-zoom");
     var copy = document.getElementById("landing-copy");
+
+    // "Enter Journey" is a direct-access shortcut for visitors who don't
+    // want to scroll — it plays the same dive/zoom hand-off as the
+    // scroll prompt instead of duplicating that logic here
+    var enterJourneyBtn = document.querySelector("[data-enter-journey]");
+    if (enterJourneyBtn) {
+      enterJourneyBtn.addEventListener("click", function () {
+        scrollPrompt.click();
+      });
+    }
 
     var hasEntered = false;
     var hasInteracted = false;
@@ -391,12 +422,15 @@
     "uniform int uFrame;\n" +
     "out vec4 outColor;\n" +
     "const float delta = 1.0;\n" +
+    "const float maxPressure = 2.0;\n" +
     "void main() {\n" +
     "  ivec2 coord = ivec2(gl_FragCoord.xy);\n" +
     "  ivec2 maxCoord = ivec2(uResolution) - ivec2(1);\n" +
     "  if (uFrame == 0) { outColor = vec4(0.0); return; }\n" +
     "  float pressure = texelFetch(uState, coord, 0).x;\n" +
     "  float pVel = texelFetch(uState, coord, 0).y;\n" +
+    "  if (isnan(pressure) || isinf(pressure)) pressure = 0.0;\n" +
+    "  if (isnan(pVel) || isinf(pVel)) pVel = 0.0;\n" +
     "  ivec2 rightCoord = ivec2(min(coord.x + 1, maxCoord.x), coord.y);\n" +
     "  ivec2 leftCoord = ivec2(max(coord.x - 1, 0), coord.y);\n" +
     "  ivec2 upCoord = ivec2(coord.x, min(coord.y + 1, maxCoord.y));\n" +
@@ -412,15 +446,17 @@
     "  pVel += delta * (-2.0 * pressure + p_right + p_left) / 4.0;\n" +
     "  pVel += delta * (-2.0 * pressure + p_up + p_down) / 4.0;\n" +
     "  pressure += delta * pVel;\n" +
-    "  pVel -= 0.006 * delta * pressure;\n" +
-    "  pVel *= 1.0 - 0.0012 * delta;\n" +
-    "  pressure *= 0.9994;\n" +
-    "  vec4 nextState = vec4(pressure, pVel, (p_right - p_left) / 2.0, (p_up - p_down) / 2.0);\n" +
+    "  pVel -= 0.005 * delta * pressure;\n" +
+    "  pVel *= 1.0 - 0.002 * delta;\n" +
+    "  pressure *= 0.999;\n" +
     "  if (uMouse.z > 0.0) {\n" +
     "    float radius = max(uMouse.w, 1.0);\n" +
     "    float dist = distance(gl_FragCoord.xy, uMouse.xy);\n" +
-    "    if (dist <= radius) { nextState.x += uMouse.z * pow(1.0 - dist / radius, 1.5); }\n" +
+    "    if (dist <= radius) { pressure += uMouse.z * (1.0 - dist / radius); }\n" +
     "  }\n" +
+    "  pressure = clamp(pressure, -maxPressure, maxPressure);\n" +
+    "  pVel = clamp(pVel, -maxPressure, maxPressure);\n" +
+    "  vec4 nextState = vec4(pressure, pVel, (p_right - p_left) / 2.0, (p_up - p_down) / 2.0);\n" +
     "  outColor = nextState;\n" +
     "}\n";
 
@@ -435,11 +471,14 @@
     "void main() {\n" +
     "  vec2 uv = gl_FragCoord.xy / uResolution.xy;\n" +
     "  vec4 data = texture(uState, uv);\n" +
-    "  vec2 sampleUv = clamp(uv + 0.38 * data.zw, vec2(0.001), vec2(0.999));\n" +
+    "  vec2 gradient = (isnan(data.z) || isinf(data.z) || isnan(data.w) || isinf(data.w)) ? vec2(0.0) : data.zw;\n" +
+    "  vec2 distortion = clamp(0.20 * gradient, vec2(-0.35), vec2(0.35));\n" +
+    "  vec2 sampleUv = clamp(uv + distortion, vec2(0.001), vec2(0.999));\n" +
     "  vec4 color = texture(uImage, sampleUv);\n" +
-    "  vec3 normal = normalize(vec3(-data.z * 1.4, 0.14, -data.w * 1.4));\n" +
-    "  float glint = pow(max(0.0, dot(normal, normalize(vec3(-3.0, 10.0, 3.0)))), 42.0);\n" +
-    "  vec3 finalColor = color.rgb + vec3(glint) * 0.25;\n" +
+    "  vec3 normal = normalize(vec3(-gradient.x, 0.20, -gradient.y));\n" +
+    "  float glint = pow(max(0.0, dot(normal, normalize(vec3(-3.0, 10.0, 3.0)))), 60.0);\n" +
+    "  float titleMask = smoothstep(0.18, 0.95, max(color.r, max(color.g, color.b)));\n" +
+    "  vec3 finalColor = color.rgb + vec3(glint) * (0.08 + titleMask * 0.30);\n" +
     "  outColor = vec4(finalColor, 1.0);\n" +
     "}\n";
 
@@ -500,11 +539,11 @@
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
   }
 
-  function createStateTexture(gl, width, height, filter) {
+  function createStateTexture(gl, width, height) {
     var texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, width, height, 0, gl.RGBA, gl.FLOAT, null);
@@ -525,30 +564,42 @@
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([253, 251, 245, 255]));
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([12, 13, 15, 255]));
     return texture;
   }
 
-  // paints a plain backdrop onto a 2D canvas — this bitmap is what the
-  // water simulation then distorts. The title itself lives in the real
-  // DOM (.visual-fallback-title), layered on top, so it stays crisp.
-  function paintLandingTitleTexture(canvas) {
+  // paints the title as flat white text onto a 2D canvas —
+  // this bitmap is what the water simulation then distorts
+  function paintLandingTitleTexture(canvas, title) {
     var ctx = canvas.getContext("2d");
     var width = canvas.width;
     var height = canvas.height;
+    var dprScale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
-    ctx.fillStyle = "#fdfbf5";
+    ctx.fillStyle = "#121317";
     ctx.fillRect(0, 0, width, height);
 
     var glow = ctx.createRadialGradient(
       width * 0.5, height * 0.46, 0,
       width * 0.5, height * 0.46, Math.max(width, height) * 0.56
     );
-    glow.addColorStop(0, "rgba(0,0,0,0)");
-    glow.addColorStop(0.55, "rgba(0,0,0,0.015)");
-    glow.addColorStop(1, "rgba(0,0,0,0.05)");
+    glow.addColorStop(0, "rgba(255,255,255,0.08)");
+    glow.addColorStop(0.42, "rgba(255,255,255,0.025)");
+    glow.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, width, height);
+
+    var fontSize = Math.min(width * 0.15, height * 0.24);
+    var safeFontSize = Math.max(56 * dprScale, fontSize);
+
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "800 " + safeFontSize + 'px "Archivo", "Inter", Arial, sans-serif';
+    ctx.letterSpacing = Math.max(0, safeFontSize * -0.02) + "px";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(title, width * 0.5, height * 0.47);
+    ctx.restore();
 
     var shade = ctx.createLinearGradient(0, 0, 0, height);
     shade.addColorStop(0, "rgba(0,0,0,0.08)");
@@ -572,13 +623,9 @@
     var floatBufferSupport = gl.getExtension("EXT_color_buffer_float");
     if (!floatBufferSupport) return;
 
-    // RGBA32F textures are only texture-complete under LINEAR filtering
-    // when this extension is present — without it they'd sample as black.
-    var stateFilter = gl.getExtension("OES_texture_float_linear") ? gl.LINEAR : gl.NEAREST;
-
     var sources = await Promise.all([
-      loadTextFile("water-simulation.frag", fallbackSimulationShader),
-      loadTextFile("water-render.frag", fallbackRenderShader)
+      loadTextFile("shaders/water-simulation.frag", fallbackSimulationShader),
+      loadTextFile("shaders/water-render.frag", fallbackRenderShader)
     ]);
     var simulationShaderSource = sources[0];
     var renderShaderSource = sources[1];
@@ -613,6 +660,7 @@
 
     var sourceTexture = createImageTexture(gl);
     var sourceCanvas = document.createElement("canvas");
+    var landingTitle = rippleCanvas.dataset.rippleTitle || "Milky Sea";
 
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
@@ -627,6 +675,7 @@
     var frame = 0;
     var rafId = null;
     var lastMoveTime = 0;
+    var lastInteractionTime = 0;
     var mouseX = 0;
     var mouseY = 0;
     var mouseStrength = 0;
@@ -639,7 +688,7 @@
     }
 
     function createTarget(width, height) {
-      var texture = createStateTexture(gl, width, height, stateFilter);
+      var texture = createStateTexture(gl, width, height);
       var framebuffer = createFramebuffer(gl, texture);
       var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
       if (status !== gl.FRAMEBUFFER_COMPLETE) {
@@ -651,7 +700,7 @@
     function updateSourceTexture() {
       sourceCanvas.width = canvasWidth;
       sourceCanvas.height = canvasHeight;
-      paintLandingTitleTexture(sourceCanvas);
+      paintLandingTitleTexture(sourceCanvas, landingTitle);
 
       gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -664,8 +713,8 @@
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvasWidth = Math.max(1, Math.round(rect.width * dpr));
       canvasHeight = Math.max(1, Math.round(rect.height * dpr));
-      simWidth = Math.max(160, Math.round(canvasWidth * 0.75));
-      simHeight = Math.max(120, Math.round(canvasHeight * 0.75));
+      simWidth = Math.max(160, Math.round(canvasWidth * 0.5));
+      simHeight = Math.max(120, Math.round(canvasHeight * 0.5));
 
       rippleCanvas.width = canvasWidth;
       rippleCanvas.height = canvasHeight;
@@ -689,9 +738,10 @@
 
       mouseX = Math.max(0, Math.min(1, x)) * simWidth;
       mouseY = (1 - Math.max(0, Math.min(1, y))) * simHeight;
-      mouseRadius = Math.max(20, Math.min(64, Math.min(simWidth, simHeight) * 0.045));
-      mouseStrength = 0.85;
+      mouseRadius = Math.max(14, Math.min(42, Math.min(simWidth, simHeight) * 0.028));
+      mouseStrength = 0.42;
       lastMoveTime = performance.now();
+      lastInteractionTime = lastMoveTime;
       startAnimation();
     }
 
@@ -738,7 +788,12 @@
 
       frame += 1;
 
-      rafId = requestAnimationFrame(renderFrame);
+      var keepAnimating = frame < 3 || nowMs - lastInteractionTime < 6000;
+      if (keepAnimating) {
+        rafId = requestAnimationFrame(renderFrame);
+      } else {
+        rafId = null;
+      }
     }
 
     function startAnimation() {
