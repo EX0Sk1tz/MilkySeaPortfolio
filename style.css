@@ -365,6 +365,7 @@ p + p { margin-top: 1.2rem; }
   font-weight: var(--weight-medium);
   font-size: var(--size-btn);
   letter-spacing: .02em;
+  text-align: center;
   cursor: pointer;
   transition: background .2s, color .2s, border-color .2s;
 }

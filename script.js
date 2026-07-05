@@ -946,11 +946,12 @@ var SITE_JOURNEY = [
       paintBubbleLabelTexture,
       {
         alpha: true,
-        // long enough for the shader's slow pressure/velocity decay to
-        // actually settle back to stillness before the render loop stops —
-        // at 1400ms it used to cut off while the ripple was still visibly
-        // moving, reading as an abrupt freeze rather than a fade-out
-        idleTimeoutMs: 3600,
+        // the shader's pressure/velocity decay is slow enough (per-frame
+        // factors of .999/.998) that no finite idle timeout ever reads as
+        // "settled" rather than "cut off mid-motion" — so these buttons
+        // just keep simulating for as long as the button is on screen
+        // instead of freezing the canvas after a fixed delay
+        idleTimeoutMs: Infinity,
         onReady: function () {
           button.classList.add("ripple-ready");
         }
