@@ -337,10 +337,18 @@ var SITE_JOURNEY = [
         /* ignore */
       }
 
-      pageVeil.classList.add("is-visible");
+      // bubble buttons get a fresh click-triggered ripple burst (see
+      // clickPulse in the water-ripple setup below) — hold off on the
+      // veil so that burst actually plays out on screen instead of being
+      // instantly covered
+      var revealDelay = link.classList.contains("btn-bubble") ? 380 : 0;
+
       setTimeout(function () {
-        window.location.href = url.href;
-      }, 420);
+        pageVeil.classList.add("is-visible");
+        setTimeout(function () {
+          window.location.href = url.href;
+        }, 420);
+      }, revealDelay);
     });
   }
 
@@ -826,7 +834,7 @@ var SITE_JOURNEY = [
       startAnimation();
     }
 
-    function updateMouseFromEvent(event) {
+    function updateMouseFromEvent(event, strength) {
       var rect = canvas.getBoundingClientRect();
       var x = (event.clientX - rect.left) / Math.max(rect.width, 1);
       var y = (event.clientY - rect.top) / Math.max(rect.height, 1);
@@ -834,7 +842,7 @@ var SITE_JOURNEY = [
       mouseX = Math.max(0, Math.min(1, x)) * simWidth;
       mouseY = (1 - Math.max(0, Math.min(1, y))) * simHeight;
       mouseRadius = Math.max(14, Math.min(42, Math.min(simWidth, simHeight) * 0.028));
-      mouseStrength = 0.42;
+      mouseStrength = strength || 0.42;
       lastMoveTime = performance.now();
       lastInteractionTime = lastMoveTime;
       startAnimation();
@@ -899,6 +907,16 @@ var SITE_JOURNEY = [
 
     container.addEventListener("pointermove", updateMouseFromEvent);
     container.addEventListener("pointerenter", updateMouseFromEvent);
+
+    // a deliberate click gets a stronger, guaranteed splash right at the
+    // click point — regardless of whether the pointer happened to be
+    // moving already — so the ripple reads clearly before the page
+    // transition takes over (see config.clickPulse callers)
+    if (config.clickPulse) {
+      container.addEventListener("click", function (event) {
+        updateMouseFromEvent(event, 0.85);
+      });
+    }
     container.addEventListener(
       "touchmove",
       function (event) {
@@ -946,6 +964,7 @@ var SITE_JOURNEY = [
       paintBubbleLabelTexture,
       {
         alpha: true,
+        clickPulse: true,
         // the shader's pressure/velocity decay is slow enough (per-frame
         // factors of .999/.998) that no finite idle timeout ever reads as
         // "settled" rather than "cut off mid-motion" — so these buttons
