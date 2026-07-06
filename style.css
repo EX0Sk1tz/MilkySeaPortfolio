@@ -323,8 +323,25 @@ p + p { margin-top: 1.2rem; }
    IMAGE PANELS — the visual focus of the site
    ============================================================ */
 
+/* Size varies per-image, right in the HTML, without touching this file:
+     <div class="panel wide" style="--w: 70%">
+   --w is a percentage of the normal column width. 100% (default) = fills
+   the column like before; smaller values shrink and auto-center the panel;
+   values over 100% (e.g. 115%) let it break out wider than the column for
+   emphasis. Combine with --ratio to also change its shape, e.g. a taller
+   crop: style="--w: 60%; --ratio: 4 / 5"
+   Changing --w (or --ratio) on its own resizes the panel proportionally —
+   both dimensions move together. To pin the height and change ONLY the
+   width (or vice versa), set an explicit --h too, e.g. a fixed-height
+   panel whose width you can still tweak freely:
+     style="--w: 60%; --h: 22rem"
+   Once --h is set it overrides --ratio for that panel; --w keeps working
+   as normal, so the two axes are now independent. */
 .panel {
   position: relative;
+  width: var(--w, 100%);
+  height: var(--h, auto);
+  margin-left: calc((100% - var(--w, 100%)) / 2);
   border-radius: var(--radius);
   border: 1px solid var(--line-soft);
   background: var(--panel-grad);
@@ -335,22 +352,31 @@ p + p { margin-top: 1.2rem; }
    expected name — sits on top of and fully hides the placeholder
    span below it. If the file is missing, the <img>'s onerror
    removes it and the placeholder shows through untouched. */
+/* Panels force every photo into a fixed box shape, so object-fit:cover
+   crops whatever doesn't fit — by default cutting evenly from the center.
+   If that crop lands wrong (e.g. slicing off a head in a short wide panel),
+   nudge it per-image right in the HTML instead of editing this file:
+     <img src="..." style="--focal: 50% 20%">
+   Values are horizontal% vertical% of the ORIGINAL photo to keep centered
+   in the visible crop. Lower vertical % = show more of the top of the photo,
+   higher = show more of the bottom. Default is dead center (50% 50%). */
 .panel img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
+  object-position: var(--focal, 50% 50%);
 }
 .panel span {
   font-size: var(--size-panel-label); letter-spacing: .18em; text-transform: uppercase;
   color: var(--faint);
   padding: 1rem; text-align: center;
 }
-.panel.wide  { aspect-ratio: 16 / 8; }
-.panel.photo { aspect-ratio: 3 / 4; }
-.panel.card  { aspect-ratio: 4 / 3; }
+.panel.wide  { aspect-ratio: var(--ratio, 16 / 8); }
+.panel.photo { aspect-ratio: var(--ratio, 3 / 4); }
+.panel.card  { aspect-ratio: var(--ratio, 4 / 3); }
 
 @media (min-width: 900px) {
-  .panel.wide { aspect-ratio: 21 / 8; }
+  .panel.wide { aspect-ratio: var(--ratio, 21 / 8); }
 }
 
 /* ---------- buttons (pill) ---------- */
@@ -609,7 +635,7 @@ p + p { margin-top: 1.2rem; }
 
 /* ---------- article body (detail + inspiration pages) ---------- */
 .article-body { padding-top: 0; }
-.article-body .panel { margin: clamp(2rem, 5vw, 3.5rem) 0; }
+.article-body .panel { margin-block: clamp(2rem, 5vw, 3.5rem); }
 .lead { color: var(--text); }
 
 /* ---------- contact form (About page) ---------- */
