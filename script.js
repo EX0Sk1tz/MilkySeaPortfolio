@@ -272,6 +272,7 @@ var SITE_JOURNEY = [
     } catch (err) {
       /* ignore */
     }
+
     if (reduceMotion) {
       document.documentElement.classList.add("is-revealed");
     } else {
@@ -811,18 +812,27 @@ var SITE_JOURNEY = [
     }
 
     function resizeCanvas() {
-      var rect = container.getBoundingClientRect();
-      if (rect.width < 1 || rect.height < 1) return;
+      // offsetWidth/Height reflect the untransformed layout box, unlike
+      // getBoundingClientRect() — which bakes in any CSS transform (e.g.
+      // the page-reveal scale-in on #main). Sizing off the transformed
+      // rect would bake in whatever scale factor happened to be mid-
+      // animation at the moment this runs, leaving the canvas a stale
+      // wrong size once the transition settles (the label then reads as
+      // shifted inside its now-full-size pill until something else
+      // happens to trigger a resize).
+      var width = container.offsetWidth;
+      var height = container.offsetHeight;
+      if (width < 1 || height < 1) return;
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvasWidth = Math.max(1, Math.round(rect.width * dpr));
-      canvasHeight = Math.max(1, Math.round(rect.height * dpr));
+      canvasWidth = Math.max(1, Math.round(width * dpr));
+      canvasHeight = Math.max(1, Math.round(height * dpr));
       simWidth = Math.max(160, Math.round(canvasWidth * 0.5));
       simHeight = Math.max(120, Math.round(canvasHeight * 0.5));
 
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
-      canvas.style.width = Math.max(1, rect.width) + "px";
-      canvas.style.height = Math.max(1, rect.height) + "px";
+      canvas.style.width = Math.max(1, width) + "px";
+      canvas.style.height = Math.max(1, height) + "px";
 
       destroyTarget(readTarget);
       destroyTarget(writeTarget);
@@ -830,7 +840,7 @@ var SITE_JOURNEY = [
       writeTarget = createTarget(simWidth, simHeight);
       frame = 0;
 
-      updateSourceTexture(rect.width, rect.height, dpr);
+      updateSourceTexture(width, height, dpr);
       startAnimation();
     }
 
